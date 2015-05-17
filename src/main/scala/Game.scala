@@ -28,30 +28,21 @@ class Game {
   }
 
   def f(s: String): Image[Color] =
-   if (s == "l") ImageMonad.point(Color.gray) else greenImage()
+    if (s == "l") ImageMonad.point(Color.gray) else greenImage()
 
-  // should it be done inside one big IO ? May be first goal is to draw animation without any input.
   def start() = {
     val world: World = initializeWorld()
 
-    // loop until exit is read.
-    //shall be something like: IO.run(world)
-    //and it reads Input
-    // modifies World state
-    // draws (actually combines the previous image with a next image)
-    // yields IO[Draw] if state yields true else loops again
-
+    //      input <- readInput() | IO[Key.Value]
+    //      world = f(input)     | here comes the state, but so far can be still f: World, Key => World    l
+    //      image = f1(world)    | graphical representation of that world: World => Image[Color]
+    //      _ <- draw(image)     | Image => IO[Unit]
     val StateWorld = StateT.stateMonad[World]
     for {
       key <- IO.readLn
       image = f(key)
-//        input <- readInput()
-//      world = f(input)         l
-//      image = f1(world)
       _ <- draw(image)
     } yield ()
-
-    //    loop.unsafePerformIO().show()
 
     //    StateWorld.untilM_(get, loop).run(world)
   }
