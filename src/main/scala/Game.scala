@@ -38,12 +38,14 @@ class Game {
     //      image = f1(world)    | graphical representation of that world: World => Image[Color]
     //      _ <- draw(image)     | Image => IO[Unit]
     val StateWorld = StateT.stateMonad[World]
-    for {
-      key <- IO.readLn
-      image = f(key)
-      _ <- draw(image)
-    } yield ()
-
+    def loop = {
+      for {
+        key <- IO.readLn
+        image = f(key)
+        _ <- draw(image)
+      } yield ()
+    }
+    IO.ioMonad.untilM_(loop, IO{false} )
     //    StateWorld.untilM_(get, loop).run(world)
   }
 
@@ -81,8 +83,9 @@ class Game {
   def greenImage(): Image[Color] =
     ImageMonad.point(Color.green)
 
-  def showMainScreen(image: Image[Color]): IO[Input] = IO {
-    new MainScreen(640, 480).rasterize(image)
-  }
+  // thats the idea, to get Input from the main frame. Still have no clue how to manage it.
+  //  def showMainScreen(image: Image[Color]): IO[Input] = IO {
+  //    new MainScreen(640, 480).rasterize(image)
+  //  }
 
 }
