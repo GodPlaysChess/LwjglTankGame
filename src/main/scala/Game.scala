@@ -1,158 +1,97 @@
-import java.io.PrintStream
-import java.nio.ByteBuffer
+import java.awt.Color
 
-import org.lwjgl.Sys
-import org.lwjgl.glfw.Callbacks._
-import org.lwjgl.glfw.GLFW._
-import org.lwjgl.glfw._
-import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl._
-import org.lwjgl.system.MemoryUtil._
+import data.World
+import engine.ImageFun.Image
+import engine.{ImageMonad, Draw, MainScreen}
 
-class Game() {
-  // We need to strongly reference callback instances.
-  // The window handle
-  private var window: Long = _
-  private var errorCallback: GLFWErrorCallback = _
-  private var keyCallback: GLFWKeyCallback = _
+import scala.swing.event.Key
+import scalaz.Scalaz._
+import scalaz.{Free, State, StateT}
+import scalaz.effect.IO
 
-  def run() {
-    System.out.println("Hello LWJGL " + Sys.getVersion + "!")
+class Game {
+  val screen: MainScreen = new MainScreen(640, 480)
 
-    try {
-      init()
-      loop()
+  /* just playing with IO */
+  def loopReadFromConsole = for {
+    line <- IO.readLn
+    _ <- IO.putLn(line)
+  } yield ()
 
-      // Release window and window callbacks
-      glfwDestroyWindow(window)
-      keyCallback.release()
-    } finally {
-      // Terminate GLFW and release the GLFWerrorfun
-      glfwTerminate()
-      errorCallback.release()
-    }
+  def showEmptyScreen: Draw =
+    new Draw(500, 500, ImageMonad.point(Color.red))
+
+  /* end of playing with IO */
+
+  def initializeWorld(): World = {
+    World()
   }
 
-  private def init() {
-    // Setup an error callback. The default implementation
-    // will print the error message in System.err.
-    errorCallback = errorCallbackPrint(System.err)
-    glfwSetErrorCallback(errorCallback)
+  def f(s: String): Image[Color] =
+   if (s == "l") ImageMonad.point(Color.gray) else greenImage()
 
-    // Initialize GLFW. Most GLFW functions will not work before doing this.
-    if (glfwInit() != GL11.GL_TRUE)
-      throw new IllegalStateException("Unable to initialize GLFW")
+  // should it be done inside one big IO ? May be first goal is to draw animation without any input.
+  def start() = {
+    val world: World = initializeWorld()
 
-    // Configure our window
-    glfwDefaultWindowHints() // optional, the current window hints are already the default
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE) // the window will stay hidden after creation
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE) // the window will be resizable
+    // loop until exit is read.
+    //shall be something like: IO.run(world)
+    //and it reads Input
+    // modifies World state
+    // draws (actually combines the previous image with a next image)
+    // yields IO[Draw] if state yields true else loops again
 
-    val WIDTH: Int = 300
-    val HEIGHT: Int = 300
+    val StateWorld = StateT.stateMonad[World]
+    for {
+      key <- IO.readLn
+      image = f(key)
+//        input <- readInput()
+//      world = f(input)         l
+//      image = f1(world)
+      _ <- draw(image)
+    } yield ()
 
-    // Create the window
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Hello World!", NULL, NULL)
-    if (window == NULL)
-      throw new RuntimeException("Failed to create the GLFW window")
+    //    loop.unsafePerformIO().show()
 
-    // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-    keyCallback = new GLFWKeyCallback() {
-      override def invoke(window: Long, key: Int, scancode: Int, action: Int, modes: Int): Unit = {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-          glfwSetWindowShouldClose(window, GL_TRUE) // We will detect this in our rendering loop
-      }
-    }
-    glfwSetKeyCallback(window, keyCallback)
-
-    // Get the resolution of the primary monitor
-    val vidmode: ByteBuffer = glfwGetVideoMode(glfwGetPrimaryMonitor())
-    // Center our window
-    glfwSetWindowPos(
-      window,
-      (GLFWvidmode.width(vidmode) - WIDTH) / 2,
-      (GLFWvidmode.height(vidmode) - HEIGHT) / 2
-    )
-
-    // Make the OpenGL context current
-    glfwMakeContextCurrent(window)
-    // Enable v-sync
-    glfwSwapInterval(1)
-
-    // Make the window visible
-    glfwShowWindow(window)
+    //    StateWorld.untilM_(get, loop).run(world)
   }
 
-  private def loop() {
-    // This line is critical for LWJGL's interoperation with GLFW's
-    // OpenGL context, or any context that is managed externally.
-    // LWJGL detects the context that is current in the current thread,
-    // creates the ContextCapabilities instance and makes the OpenGL
-    // bindings available for use.
-    GLContext.createFromCurrent()
+  type Input = Key.Value
 
-    // Set the clear color
-    glClearColor(1.0f, 0.0f, 0.0f, 0.0f)
+  //
+  //  def loop: IO[Draw] = {
+  //    for {
+  //      input <- readInput() // IO action
+  //      out <- step(input)
+  //      world1 <- get[World]
+  //      image <- draw(world1) //combine instead of draw?
+  //    } yield {
+  //      if (out) loop
+  //      else image
+  //    }
+  //  }
 
-    // Run the rendering loop until the user has attempted to close
-    // the window or has pressed the ESCAPE key.
-    while (glfwWindowShouldClose(window) == GL_FALSE) {
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) // clear the framebuffer
+  type Output = Boolean
 
-      glfwSwapBuffers(window) // swap the color buffers
+  // whether game is finished or not (may be screen is closed or whatever)
+  def step(input: Input): State[World, Output] = ???
 
-      // Poll for window events. The key callback above will only be
-      // invoked during this call.
-      glfwPollEvents()
-    }
+  def readInput(): IO[Input] = {
+    IO[Input](Key.Left)
   }
-}
 
-object Game {
-  def init(width: Int, heigth: Int, printStream: PrintStream): (GLFWErrorCallback, GLFWKeyCallback) = {
-    val errorCallback = errorCallbackPrint(printStream)
-    glfwSetErrorCallback(errorCallback)
-
-    // Initialize GLFW. Most GLFW functions will not work before doing this.
-    if (glfwInit() != GL11.GL_TRUE)
-      throw new IllegalStateException("Unable to initialize GLFW")
-
-    // Configure our window
-    glfwDefaultWindowHints() // optional, the current window hints are already the default
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE) // the window will stay hidden after creation
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE) // the window will be resizable
-
-    // Create the window
-    val window = glfwCreateWindow(width, heigth, "Hello World!", NULL, NULL)
-    if (window == NULL)
-      throw new RuntimeException("Failed to create the GLFW window")
-
-    // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-    val keyCallback = new GLFWKeyCallback() {
-      override def invoke(window: Long, key: Int, scancode: Int, action: Int, modes: Int): Unit = {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-          glfwSetWindowShouldClose(window, GL_TRUE) // We will detect this in our rendering loop
-      }
-    }
-    glfwSetKeyCallback(window, keyCallback)
-
-    // Get the resolution of the primary monitor
-    val vidmode: ByteBuffer = glfwGetVideoMode(glfwGetPrimaryMonitor())
-    // Center our window
-    glfwSetWindowPos(
-      window,
-      (GLFWvidmode.width(vidmode) - WIDTH) / 2,
-      (GLFWvidmode.height(vidmode) - HEIGHT) / 2
-    )
-
-    // Make the OpenGL context current
-    glfwMakeContextCurrent(window)
-    // Enable v-sync
-    glfwSwapInterval(1)
-
-    // Make the window visible
-    glfwShowWindow(window)
-
-    (errorCallback, keyCallback)
+  def draw(image: Image[Color]): IO[Unit] = {
+    IO.io(rw => Free.return_(rw -> {
+      new Draw(500, 500, image).show()
+      ()
+    }))
   }
+
+  def greenImage(): Image[Color] =
+    ImageMonad.point(Color.green)
+
+  def showMainScreen(image: Image[Color]): IO[Input] = IO {
+    new MainScreen(640, 480).rasterize(image)
+  }
+
 }

@@ -12,6 +12,8 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.2"
 
 libraryDependencies += "org.scalaz.stream" %% "scalaz-stream" % "0.7a"
 
+libraryDependencies += "org.scala-lang" % "scala-swing" % "2.11+"
+
 //libraryDependencies += "org.lwjgl.lwjgl" % "lwjgl" % "2.9.3" withSources() withJavadoc()
 
 
