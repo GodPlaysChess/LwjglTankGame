@@ -37,7 +37,7 @@ class Game {
     //    StateWorld.untilM_(get, loop).run(world)
   }
 
-  def start1(): IO[Image[swing.Color]] = {
+  def start1: IO[Image[swing.Color]] = {
     def loop: IO[Image[Color]] = {
       for {
         key <- IO.readLn
