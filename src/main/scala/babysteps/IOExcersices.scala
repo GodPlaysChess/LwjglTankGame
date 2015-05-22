@@ -1,6 +1,7 @@
 package babysteps
 
 import scalaz.Scalaz._
+import scalaz.State
 import scalaz.effect.IO
 
 /**
@@ -14,8 +15,9 @@ object IOExcersices {
     echoWithIncrement.unsafePerformIO()
   }
 
-  def echoWithIncrement: IO[Unit] = {
-    def loop(i: Int): IO[Int] = for {
+  // !!!!! How to get a value out of IO context?
+  def echoWithIncrement: IO[State[Int, Unit]] = {
+    def loop: IO[State[Int, Unit]] = for {
       key ← IO.readLn
       _ ← IO.put("typed " + i)
     } yield i + 1
