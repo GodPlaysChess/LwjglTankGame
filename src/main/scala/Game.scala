@@ -2,33 +2,21 @@ import java.awt.Color
 
 import data.World
 import engine.ImageFun.Image
-import engine.{ImageMonad, Draw, MainScreen}
+import engine.{Draw, ImageMonad, MainScreen}
 
+import scala.languageFeature.higherKinds
 import scala.swing.event.Key
 import scalaz.Scalaz._
-import scalaz.{Free, State, StateT}
 import scalaz.effect.IO
+import scalaz.{Free, State, StateT}
 
 class Game {
+
+  type Input = Key.Value
+  type Output = Boolean
   val screen: MainScreen = new MainScreen(640, 480)
 
-  /* just playing with IO */
-  def loopReadFromConsole = for {
-    line <- IO.readLn
-    _ <- IO.putLn(line)
-  } yield ()
-
-  def showEmptyScreen: Draw =
-    new Draw(500, 500, ImageMonad.point(Color.red))
-
-  /* end of playing with IO */
-
-  def initializeWorld(): World = {
-    World()
-  }
-
-  def f(s: String): Image[Color] =
-    if (s == "l") ImageMonad.point(Color.gray) else greenImage()
+//  type IOState[+A, B] = StateT[IO, A, B]
 
   def start() = {
     val world: World = initializeWorld()
@@ -49,22 +37,42 @@ class Game {
     //    StateWorld.untilM_(get, loop).run(world)
   }
 
-  type Input = Key.Value
+  def start1(): IO[Image[swing.Color]] = {
+    def loop: IO[Image[Color]] = {
+      for {
+        key <- IO.readLn
+        image = f(key)
+      } yield image
+    }
+    IO.ioMonad.forever(loop);//untilM(loop, IO{false})(ImageMonad)
+  }
 
-  //
-  //  def loop: IO[Draw] = {
-  //    for {
-  //      input <- readInput() // IO action
-  //      out <- step(input)
-  //      world1 <- get[World]
-  //      image <- draw(world1) //combine instead of draw?
-  //    } yield {
-  //      if (out) loop
-  //      else image
-  //    }
-  //  }
+//  type WorldMonad = State[World, Image[Color]]
+//  type WorldMonadT[M[+_]] = StateT[M, World, Image[Color]]
+//  type WorldMonadIO = WorldMonadT[IO]
 
-  type Output = Boolean
+  def initializeWorld(): World = {
+    World()
+  }
+
+  def f(s: String): Image[Color] =
+    if (s == "l") ImageMonad.point(Color.gray) else greenImage()
+
+  def greenImage(): Image[Color] =
+    ImageMonad.point(Color.green)
+
+  def draw(image: Image[Color]): IO[Unit] = {
+    IO.io(rw => Free.return_(rw -> {
+      new Draw(500, 500, image).show() // should not be always new
+      ()
+    }))
+  }
+
+//  def update(draw: Draw, image: Image[Color]): Draw
+//    IO.io(rw => Free.return_(rw -> {
+//      new Draw(500, 500, image).show() // should not be always new
+//      ()
+//    }))
 
   // whether game is finished or not (may be screen is closed or whatever)
   def step(input: Input): State[World, Output] = ???
@@ -72,20 +80,4 @@ class Game {
   def readInput(): IO[Input] = {
     IO[Input](Key.Left)
   }
-
-  def draw(image: Image[Color]): IO[Unit] = {
-    IO.io(rw => Free.return_(rw -> {
-      new Draw(500, 500, image).show()
-      ()
-    }))
-  }
-
-  def greenImage(): Image[Color] =
-    ImageMonad.point(Color.green)
-
-  // thats the idea, to get Input from the main frame. Still have no clue how to manage it.
-  //  def showMainScreen(image: Image[Color]): IO[Input] = IO {
-  //    new MainScreen(640, 480).rasterize(image)
-  //  }
-
 }

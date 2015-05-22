@@ -1,0 +1,19 @@
+Applicative builder = |@|:   F[A] |@| F[B] ((A,B) => C)  =>  F[C]
+Monad transformers for composing monads
+<Monad>T stands for <Monad>Transformer.
+Kleisli = ReaderT
+
+											With transformer
+
+for {                                for {
+ xOpt <- lookup("3")                   x <- Kleisli(lookup("3"))
+ yOpt <- lookup("y")                   y <- Kleisli(lookup("y"))
+} yield (for {                       } yield x + y
+          x <- xOpt
+          y <- yOpt
+         } yield x + y)
+
+
+ Lift Image to Draw.
+ Need something like KeyboardAndScreenMonad, which might be combined from IO and Display.
+ May be can get rid of Draw, to have just Image.draw.  But not sure about that, since Image is a D => D => A function

@@ -4,11 +4,10 @@ import java.io.File
 import javax.imageio.ImageIO
 
 import engine.ImageFun.Image
-
-import scala.swing.Color
 import mech.Math._
 
-import scalaz.Monad
+import scala.swing.Color
+import scalaz.{Monad, MonadPlus}
 
 object ImageFun {
 
@@ -25,11 +24,6 @@ object ImageFun {
 
   def combineMany[T](images: List[Image[T]], combine: (T, T) => T): Image[T] =
     images.reduceLeft((image1, image2) => combineImage(image1, image2, combine))
-
-  /* Want to write:
-  def coordTrans[T](trans:CoordTrans):ImageTrans[T] =
-     (image:Image[T]) => image.tupled compose trans
-  */
 
   // Transform the coordinates of an image by some function
   def coordTrans[T](trans: CoordTrans): ImageTrans[T] =
@@ -83,10 +77,13 @@ object ImageFun {
 }
 
 // looks really like Reader
-object ImageMonad extends Monad[Image] {
+object ImageMonad extends Monad[Image] with MonadPlus[Image] {
   override def point[A](a: => A): Image[A] = (_, _) => a
 
   override def bind[A, B](fa: Image[A])(f: (A) => Image[B]): Image[B] =
     (col, row) => f(fa(col, row))(col, row)
 
+  override def empty[A]: Image[A] = (_, _) ⇒ None.asInstanceOf[A]
+
+  override def plus[A](a: Image[A], b: ⇒ Image[A]): Image[A] = bind(a)(_ ⇒ b)
 }
