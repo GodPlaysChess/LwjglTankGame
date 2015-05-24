@@ -1,7 +1,7 @@
 package babysteps
 
+import scalaz.Monad
 import scalaz.Scalaz._
-import scalaz.State
 import scalaz.effect.IO
 
 /**
@@ -12,17 +12,65 @@ import scalaz.effect.IO
 object IOExcersices {
 
   def main(args: Array[String]) {
-    echoWithIncrement.unsafePerformIO()
+    incrementingWithCondition(1).unsafePerformIO()
   }
 
-  // !!!!! How to get a value out of IO context?
-  def echoWithIncrement: IO[State[Int, Unit]] = {
-    def loop: IO[State[Int, Unit]] = for {
-      key ← IO.readLn
-      _ ← IO.put("typed " + i)
-    } yield i + 1
-    IO.ioMonad.forever(loop(0))
+  /*
+  * main = iterateM_
+  *     (\w -> displayWorld w >> return (gameLoop w)) initWorld
+  *
+  *     Or
+  *
+  *     main = loop initWorld
+  *         where loop w = displayWorld w >> loop (gameLoop w)
+  * */
+
+
+ /* def incrementInMonadWithState: IO[State[Int, Boolean]] = {
+    def incIOState(): IO[State[Int, Boolean]] = for {
+      char ← IO.readLn
+      _ ← IO.putLn(char + " counting: " + "..")
+    } yield for {
+        i ← get[Int]
+        _ ← put[Int](i + 1)
+      } yield i < 10
+
+    IO.ioMonad.iterateWhile(incIOState)(s ⇒ s.get[Boolean])
+  }*/
+
+
+  def incrementingWithCondition(start: Int) = {
+    def step(world: Int): IO[Int] = for {
+      char ← IO.readLn
+      _ ← IO.putLn(char + " counting: " + world + "..")
+    } yield world + 1
+
+    whileMprop(step)(start)(_ < 5)(IO.ioMonad)
   }
+
+  def echoWithIncrementRecursive(world: Int): IO[Int] = IO.ioMonad.join(for {
+    char ← IO.readLn
+    _ ← IO.putLn(char +" counting: " + world + "..")
+  } yield echoWithIncrementRecursive(world + 1))
+
+
+  def incrementInMonad(start: Int) = {
+    def echoWithIncrementOne(world: Int): IO[Int] = for {
+      char ← IO.readLn
+      _ ← IO.putLn(char + " counting: " + world + "..")
+    } yield world + 1
+
+    iterateM[IO, Int, Int](echoWithIncrementOne)(start)(IO.ioMonad)
+//    IO.ioMonad.iterateUntil(echoWithIncrementOne(start))(_ > 40)
+  }
+
+  def iterateM[M[_], A, B](f: A ⇒ M[A])(a: A)(implicit M: Monad[M]): M[B] =
+    M.bind(f(a))(n ⇒ iterateM(f)(n)(M))
+
+  def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
+    if (!p(a)) f(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
+
+  def keepGoing(i: Int): Boolean = ???
 
   def eternalConditionalEcho: IO[Unit] = {
     def loop: IO[String] = for {
@@ -32,12 +80,10 @@ object IOExcersices {
     IO.ioMonad.forever(loop)
   }
 
-  def text(s: String) = s match {
+  private[this] def text(s: String) = s match {
     case "l" ⇒ "you went left"
     case "r" ⇒ "you went right"
     case "f" ⇒ "do not know word F"
     case _ ⇒ "left or right?"
   }
-
-
 }
