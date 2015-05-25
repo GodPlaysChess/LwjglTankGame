@@ -23,12 +23,12 @@ class Game {
   }
 
   def start(start: World) = {
-    def step(world: World): IO[World] = for {
-      key ? ScreenOps.readInput
-      _ ? ScreenOps.draw(ImageMonad.point(world))
-    } yield worldTick(world)
-
-    whileMprop(step)(start)(endCondition)(IO.ioMonad)
+//    def step(world: World): IO[World] = for {
+//      key ? ScreenOps.readInput
+//      _ ? ScreenOps.draw(ImageMonad.point(world))
+//    } yield worldTick(world)
+//
+//    whileMprop(step)(start)(endCondition)(IO.ioMonad)
   }
 
   //  type IOState[+A, B] = StateT[IO, A, B]

@@ -1,7 +1,8 @@
 package babysteps
 
-import scalaz.Monad
+import scalaz.{State, Monad}
 import scalaz.Scalaz._
+
 import scalaz.effect.IO
 
 /**
@@ -26,17 +27,20 @@ object IOExcersices {
   * */
 
 
- /* def incrementInMonadWithState: IO[State[Int, Boolean]] = {
-    def incIOState(): IO[State[Int, Boolean]] = for {
-      char ← IO.readLn
-      _ ← IO.putLn(char + " counting: " + "..")
-    } yield for {
+  def incrementInMonadWithState: State[Int, Boolean] = {
+    import scalaz._
+    def incIOState(input: IO[String]): State[Int, IO[String]] = for {
         i ← get[Int]
-        _ ← put[Int](i + 1)
-      } yield i < 10
+        _ ← put[Int](i)
+      } yield {
+        IO.readLn
+      }
+
+    val stateio: State[Int, IO[String]] = incIOState(IO{ "2" })
+    val iostate = stateio.sequence
 
     IO.ioMonad.iterateWhile(incIOState)(s ⇒ s.get[Boolean])
-  }*/
+  }
 
 
   def incrementingWithCondition(start: Int) = {
