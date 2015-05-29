@@ -16,7 +16,7 @@ class Game {
   type Output = Boolean
   val screen: MainScreen = new MainScreen(640, 480)
 
-  def endCondition: (World) ? Output = _ ? false
+  def endCondition: (World) ⇒ Output = _ ⇒ false
 
   def worldTick(world: World): World = {
     ???
@@ -51,8 +51,8 @@ class Game {
     }))
   }
 
-  def whileMprop[M[_], A](f: A ? M[A])(a: A)(p: A ? Boolean)(implicit M: Monad[M]): M[A] =
-    if (!p(a)) f(a) else M.bind(f(a))(n ? whileMprop(f)(n)(p)(M))
+  def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
+    if (!p(a)) f(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
 }
 
 object ScreenOps {

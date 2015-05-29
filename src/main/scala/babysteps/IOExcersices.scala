@@ -1,8 +1,9 @@
 package babysteps
 
-import scalaz.{State, Monad}
+import scalaz._
+import scala.language.higherKinds
+import scalaz.{IndexedStateT, StateT, Monad}
 import scalaz.Scalaz._
-
 import scalaz.effect.IO
 
 /**
@@ -13,7 +14,11 @@ import scalaz.effect.IO
 object IOExcersices {
 
   def main(args: Array[String]) {
-    incrementingWithCondition(1).unsafePerformIO()
+//    loopingState
+    println(simpleLoopUntil(_ > 5)(i ⇒ i + 1)(3))
+    //    val (s, i): (String, Int) = ioWIthStateExample("long message").unsafePerformIO()
+    //    println("result was %d, final state was %s".format(i, s))
+    //    incrementingWithCondition(1).unsafePerformIO()
   }
 
   /*
@@ -26,21 +31,47 @@ object IOExcersices {
   *         where loop w = displayWorld w >> loop (gameLoop w)
   * */
 
+  type StringIO[A] = StateT[IO, String, A]
 
-  def incrementInMonadWithState: State[Int, Boolean] = {
-    import scalaz._
-    def incIOState(input: IO[String]): State[Int, IO[String]] = for {
-        i ← get[Int]
-        _ ← put[Int](i)
-      } yield {
-        IO.readLn
-      }
+  def ioWIthStateExample: IndexedStateT[IO, String, String, Int] =
+    for {
+      _ ← IO.putStrLn("Enter something ").liftIO[StringIO]
+      s ← get[String].lift[IO]
+      input ← IO.readLn.liftIO[StringIO]
+      _ ← put("entered " + input).lift[IO]
+    } yield input.length
 
-    val stateio: State[Int, IO[String]] = incIOState(IO{ "2" })
-    val iostate = stateio.sequence
 
-    IO.ioMonad.iterateWhile(incIOState)(s ⇒ s.get[Boolean])
-  }
+/*  def loopingState: State[Int, Boolean] = {
+    def incr: State[Int, Boolean] = for {
+      mod ← modify[Int](_ + 1)
+    } yield (mod > 5)
+
+    val StateX = StateT.stateMonad[Int]
+    StateX.iterateUntil(incr)(_)
+    //    val M = StateT.stateMonad[Int]
+
+    //    M.iterateUntil(incr)(get)
+  }*/
+
+  def simpleLoopUntil(p: Int => Boolean)(f: Int ⇒ Int): Int ⇒ Int =
+    a ⇒ if (p(a)) a else simpleLoopUntil(p)(f)(f(a))
+
+
+  //  def incrementInMonadWithState: State[Int, Boolean] = {
+  //    import scalaz._
+  //    def incIOState(input: IO[String]): State[Int, IO[String]] = for {
+  //        i ← get[Int]
+  //        _ ← put[Int](i)
+  //      } yield {
+  //        IO.readLn
+  //      }
+  //
+  //    val stateio: State[Int, IO[String]] = incIOState(IO{ "2" })
+  //    val iostate = stateio.sequence
+  //
+  //    IO.ioMonad.iterateWhile(incIOState)(s ⇒ s.get[Boolean])
+  //  }
 
 
   def incrementingWithCondition(start: Int) = {
@@ -54,7 +85,7 @@ object IOExcersices {
 
   def echoWithIncrementRecursive(world: Int): IO[Int] = IO.ioMonad.join(for {
     char ← IO.readLn
-    _ ← IO.putLn(char +" counting: " + world + "..")
+    _ ← IO.putLn(char + " counting: " + world + "..")
   } yield echoWithIncrementRecursive(world + 1))
 
 
@@ -65,7 +96,6 @@ object IOExcersices {
     } yield world + 1
 
     iterateM[IO, Int, Int](echoWithIncrementOne)(start)(IO.ioMonad)
-//    IO.ioMonad.iterateUntil(echoWithIncrementOne(start))(_ > 40)
   }
 
   def iterateM[M[_], A, B](f: A ⇒ M[A])(a: A)(implicit M: Monad[M]): M[B] =
