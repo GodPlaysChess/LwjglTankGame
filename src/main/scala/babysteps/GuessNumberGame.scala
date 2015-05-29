@@ -19,14 +19,22 @@ object GuessNumberGame {
 object GuessNumber {
 
   def game: IO[Unit] = for {
-    goal ← maxNumber
+    goal ← requireMaxNumber
     realNumber ← Rng.chooseint(0, goal.toInt).run
     amountOfTries ← ioMonad.whileM(askGuess(realNumber), putStrLn("no"))
     _ ← putStrLn(s"finally, you guessed from ${amountOfTries.size + 1} try")
   } yield ()
   
-  def maxNumber: IO[String] = for {
-    _ ← putStrLn("Enter max number")
+  def requireMaxNumber: IO[Int] = {
+    val optionMonadPlus = scalaz.std.AllInstances.optionInstance
+    val x: IO[Option[String]] = ioMonad.whileM(IO.readLn.map(_.isInstanceOf[Int]), askAndReadNumber)(optionMonadPlus)
+    x map (_.get.toInt)
+  }
+
+
+  def askAndReadNumber: IO[String] =
+    for {
+    _ ← putStrLn("Enter a number please")
     maxN ← readLn
   } yield maxN
   
