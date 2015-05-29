@@ -4,6 +4,7 @@ import data.World
 import engine.ImageFun.Image
 import engine.{Draw, ImageMonad, MainScreen}
 
+import scala.language.higherKinds
 import scala.languageFeature.higherKinds
 import scala.swing.event.Key
 import scalaz.Scalaz._

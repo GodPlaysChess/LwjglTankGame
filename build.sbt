@@ -14,6 +14,6 @@ libraryDependencies += "org.scalaz.stream" %% "scalaz-stream" % "0.7a"
 
 libraryDependencies += "org.scala-lang" % "scala-swing" % "2.11+"
 
-//libraryDependencies += "org.lwjgl.lwjgl" % "lwjgl" % "2.9.3" withSources() withJavadoc()
+libraryDependencies += "com.nicta" %% "rng" % "1.3.0"
 
 
