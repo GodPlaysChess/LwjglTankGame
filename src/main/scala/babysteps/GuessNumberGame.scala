@@ -1,5 +1,7 @@
 package babysteps
 
+import com.nicta.rng.Rng
+
 import scala.language.higherKinds
 import scalaz.effect.IO
 import scalaz.effect.IO._
@@ -18,7 +20,8 @@ object GuessNumber {
 
   def game: IO[Unit] = for {
     goal ← maxNumber
-    amountOfTries ← ioMonad.whileM(askGuess(goal), putStrLn("no"))
+    realNumber ← Rng.chooseint(0, goal.toInt).run
+    amountOfTries ← ioMonad.whileM(askGuess(realNumber), putStrLn("no"))
     _ ← putStrLn(s"finally, you guessed from ${amountOfTries.size + 1} try")
   } yield ()
   
@@ -27,10 +30,10 @@ object GuessNumber {
     maxN ← readLn
   } yield maxN
   
-  def askGuess(number: String): IO[Boolean] = for {
+  def askGuess(number: Int): IO[Boolean] = for {
     _ ← putStrLn("Enter your guess")
     guess ← readLn
-  } yield guess != number
+  } yield guess.toInt != number
 
   implicit val listMonadPlus: MonadPlus[List] = scalaz.std.AllInstances.listInstance
 

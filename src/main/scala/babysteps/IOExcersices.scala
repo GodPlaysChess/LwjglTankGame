@@ -14,7 +14,6 @@ import scalaz.effect.IO
 object IOExcersices {
 
   def main(args: Array[String]) {
-//    loopingState
     println(simpleLoopUntil(_ > 5)(i ⇒ i + 1)(3))
     //    val (s, i): (String, Int) = ioWIthStateExample("long message").unsafePerformIO()
     //    println("result was %d, final state was %s".format(i, s))
@@ -56,23 +55,6 @@ object IOExcersices {
 
   def simpleLoopUntil(p: Int => Boolean)(f: Int ⇒ Int): Int ⇒ Int =
     a ⇒ if (p(a)) a else simpleLoopUntil(p)(f)(f(a))
-
-
-  //  def incrementInMonadWithState: State[Int, Boolean] = {
-  //    import scalaz._
-  //    def incIOState(input: IO[String]): State[Int, IO[String]] = for {
-  //        i ← get[Int]
-  //        _ ← put[Int](i)
-  //      } yield {
-  //        IO.readLn
-  //      }
-  //
-  //    val stateio: State[Int, IO[String]] = incIOState(IO{ "2" })
-  //    val iostate = stateio.sequence
-  //
-  //    IO.ioMonad.iterateWhile(incIOState)(s ⇒ s.get[Boolean])
-  //  }
-
 
   def incrementingWithCondition(start: Int) = {
     def step(world: Int): IO[Int] = for {
