@@ -31,11 +31,10 @@ object GuessNumber {
   private def notDigit: (Char) ⇒ Boolean =
     !Character.isDigit(_)
 
-  private def askAndReadNumber: IO[String] =
-    for {
+  private def askAndReadNumber: IO[String] = for {
       _ ← putStrLn("Enter a number please")
-      maxN ← readLn
-    } yield maxN
+      number ← readLn
+    } yield number
 
   private def askGuess(number: Int): IO[Boolean] = for {
     _ ← putStrLn("Enter your guess")
@@ -49,20 +48,19 @@ object GuessNumber {
   def bullsCows: IO[Unit] = for {
     given ← Rng.chooseint(1000, 10000).run
     _ ← putStrLn(s"DEBUG: Secret number $given")
-    tuple ← ioMonad.iterateWhile(gameLoop(given, 0))(val_tries ⇒ winningCondition(given, val_tries._1))
-    tries = tuple._2
-    _ ← putStrLn(s"you won. $tries tries, not bad")
+    tries ← ioMonad.iterateUntil(gameLoop(given))(winningCondition(given, _))
+    _ ← putStrLn(s"you won. $tries.size tries, not bad")
   } yield ()
 
   private def require4digitInt: IO[Int] = {
-    ioMonad.iterateWhile(askAndReadNumber)(s ⇒ (s forall notDigit) && (s.length == 4)) map (_.toInt)
+    ioMonad.iterateUntil(askAndReadNumber)(s ⇒ (s forall Character.isDigit) && (s.length == 4)) map (_.toInt)
   }
 
-  private def gameLoop(given: Int, tries: Int): IO[(Int, Int)] = for {
+  private def gameLoop(given: Int): IO[Int] = for {
     guess ← require4digitInt
     (bulls, cows) = calculateBullsCows(given, guess)
     _ ← putStrLn(s"$bulls bulls, $cows cows")
-  } yield (guess, tries + 1)
+  } yield guess
 
   def calculateBullsCows(given: Int, guess: Int): (Int, Int) = {
     val bulls = given.toString.zip(guess.toString).count(t ⇒ t._1 == t._2)
@@ -72,6 +70,6 @@ object GuessNumber {
 
 
   private def winningCondition(goal: Int, entered: Int): Boolean =
-    goal != entered
+    goal == entered
 
 }
