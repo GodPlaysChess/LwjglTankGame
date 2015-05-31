@@ -3,7 +3,8 @@ package babysteps
 import com.nicta.rng.Rng
 
 import scala.language.higherKinds
-import scalaz.effect.IO
+import scalaz.Alpha.M
+import scalaz.effect.{IORef, IO}
 import scalaz.effect.IO._
 import scalaz.{Monad, MonadPlus}
 
@@ -25,19 +26,19 @@ object GuessNumber {
     _ ← putStrLn(s"finally, you guessed from ${amountOfTries.size + 1} try")
   } yield ()
   
-  def requireMaxNumber: IO[Int] = {
-    val optionMonadPlus = scalaz.std.AllInstances.optionInstance
-    val x: IO[Option[String]] = ioMonad.whileM(IO.readLn.map(_.isInstanceOf[Int]), askAndReadNumber)(optionMonadPlus)
-    x map (_.get.toInt)
-  }
+  def requireMaxNumber: IO[Int] =
+    ioMonad.iterateWhile(askAndReadNumber)(_ forall notDigit) map (_.toInt)
 
+
+  private def notDigit: (Char) ⇒ Boolean =
+    !Character.isDigit(_)
 
   def askAndReadNumber: IO[String] =
     for {
     _ ← putStrLn("Enter a number please")
     maxN ← readLn
   } yield maxN
-  
+
   def askGuess(number: Int): IO[Boolean] = for {
     _ ← putStrLn("Enter your guess")
     guess ← readLn
