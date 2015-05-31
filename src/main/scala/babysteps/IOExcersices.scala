@@ -84,7 +84,7 @@ object IOExcersices {
     M.bind(f(a))(n ⇒ iterateM(f)(n)(M))
 
   def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
-    if (!p(a)) f(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
+    if (!p(a)) M.point(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
 
   def keepGoing(i: Int): Boolean = ???
 

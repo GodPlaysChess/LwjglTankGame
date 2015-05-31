@@ -3,7 +3,8 @@ package babysteps
 import com.nicta.rng.Rng
 
 import scala.language.higherKinds
-import scalaz.MonadPlus
+import scalaz.Alpha.M
+import scalaz.{Monad, MonadPlus}
 import scalaz.effect.IO
 import scalaz.effect.IO._
 
@@ -48,8 +49,8 @@ object GuessNumber {
   def bullsCows: IO[Unit] = for {
     given ← Rng.chooseint(1000, 10000).run
     _ ← putStrLn(s"DEBUG: Secret number $given")
-    tries ← ioMonad.iterateUntil(gameLoop(given))(winningCondition(given, _))
-    _ ← putStrLn(s"you won. $tries.size tries, not bad")
+    _ ← ioMonad.iterateUntil(gameLoop(given))(winningCondition(given, _))
+    _ ← putStrLn(s"you won, not bad")
   } yield ()
 
   private def require4digitInt: IO[Int] = {
@@ -68,8 +69,11 @@ object GuessNumber {
     (bulls, cows - bulls)
   }
 
-
   private def winningCondition(goal: Int, entered: Int): Boolean =
     goal == entered
+
+  /* u can use it for ugly counting solution.  tries ← whileMprop[IO, (Int, Int)](s ⇒ gameLoop(given, s._2))(0 → 0)(s ⇒ winningCondition(given, s._1))(ioMonad) */
+  def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
+    if (p(a)) M.point(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
 
 }
