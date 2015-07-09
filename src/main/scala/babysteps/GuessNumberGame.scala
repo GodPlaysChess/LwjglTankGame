@@ -48,7 +48,6 @@ object GuessNumber {
 
   def bullsCows: IO[Unit] = for {
     given ← Rng.chooseint(1000, 10000).run
-    _ ← putStrLn(s"DEBUG: Secret number $given")
     _ ← ioMonad.iterateUntil(gameLoop(given))(winningCondition(given, _))
     _ ← putStrLn(s"you won, not bad")
   } yield ()
@@ -63,7 +62,7 @@ object GuessNumber {
     _ ← putStrLn(s"$bulls bulls, $cows cows")
   } yield guess
 
-  def calculateBullsCows(given: Int, guess: Int): (Int, Int) = {
+  private def calculateBullsCows(given: Int, guess: Int): (Int, Int) = {
     val bulls = given.toString.zip(guess.toString).count(t ⇒ t._1 == t._2)
     val cows = given.toString.count(char ⇒ guess.toString.contains(char))
     (bulls, cows - bulls)
@@ -73,7 +72,7 @@ object GuessNumber {
     goal == entered
 
   /* u can use it for ugly counting solution.  tries ← whileMprop[IO, (Int, Int)](s ⇒ gameLoop(given, s._2))(0 → 0)(s ⇒ winningCondition(given, s._1))(ioMonad) */
-  def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
+  private def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
     if (p(a)) M.point(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
 
 }
