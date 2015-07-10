@@ -3,8 +3,7 @@ package babysteps
 import com.nicta.rng.Rng
 
 import scala.language.higherKinds
-import scalaz.Alpha.M
-import scalaz.{Monad, MonadPlus}
+import scalaz.{Scalaz, Applicative, Monad, MonadPlus}
 import scalaz.effect.IO
 import scalaz.effect.IO._
 
@@ -63,7 +62,7 @@ object GuessNumber {
   } yield guess
 
   private def calculateBullsCows(given: Int, guess: Int): (Int, Int) = {
-    val bulls = given.toString.zip(guess.toString).count(t ⇒ t._1 == t._2)
+    val bulls = given.toString.zip(guess.toString) count (t ⇒ t._1 == t._2)
     val cows = given.toString.count(char ⇒ guess.toString.contains(char))
     (bulls, cows - bulls)
   }
