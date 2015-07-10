@@ -45,10 +45,13 @@ object MonadTransformersExamples {
     res ← result
     _ ← putStrLn(res.toString)
   } yield()
-
-  def safeIO1(li: List[Maybe[String]]): MaybeT[IO, Unit] = ??? /* for {
-//    _ ← entrance.liftM(MaybeT.maybeTMonadTrans)
-  } yield ()                                                  */
+            //http://underscore.io/blog/posts/2013/12/20/scalaz-monad-transformers.html
+  def safeIO1(li: List[Maybe[String]]): MaybeT[IO, Int] = for {
+    _ ← entrance
+    result ← computeInIo(li)
+    res ← result
+    _ ← putStrLn(res.toString)
+  } yield res
 
   def main (args: Array[String]) {
     val strings: List[Maybe[String]] = Just("hello") :: Just("I") :: Just("am") :: Nil
