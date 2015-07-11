@@ -55,7 +55,7 @@ object MonadTransformersExamples {
   } yield res
 
   def main (args: Array[String]) {
-    val strings: List[Maybe[String]] = Just("hello") :: Just("I") :: Just("am") :: Empty[String]() :: Nil
+    val strings: List[Maybe[String]] = Just("hello") :: Just("I") :: Just("am") :: Nil
 //    safeIO(strings).unsafePerformIO()
     safeIO1(strings).run.unsafePerformIO()
   }

@@ -3,7 +3,7 @@ package babysteps
 import com.nicta.rng.Rng
 
 import scala.language.higherKinds
-import scalaz.{Scalaz, Applicative, Monad, MonadPlus}
+import scalaz._
 import scalaz.effect.IO
 import scalaz.effect.IO._
 
@@ -12,11 +12,16 @@ import scalaz.effect.IO._
  */
 object GuessNumberGame {
   def main(args: Array[String]) {
-    GuessNumber.bullsCows.unsafePerformIO()
+    GuessNumber.bullsCows.run.flatMap(logandres ⇒ putStrLn(logandres._1.mkString("\n"))).unsafePerformIO()
   }
 }
 
 object GuessNumber {
+
+  /* Implicits */
+  implicit val listMonoid = scalaz.std.AllInstances.listMonoid[String]
+  implicit val WMT = WriterT.writerTMonad[IO, List[String]]
+
 
   def guessNumber: IO[Unit] = for {
     goal ← requireMaxNumber
@@ -45,10 +50,10 @@ object GuessNumber {
 
   /* =============================================== */
 
-  def bullsCows: IO[Unit] = for {
-    given ← Rng.chooseint(1000, 10000).run
-    _ ← ioMonad.iterateUntil(gameLoop(given))(winningCondition(given, _))
-    _ ← putStrLn(s"you won, not bad")
+  def bullsCows: WriterT[IO, List[String], Unit] = for {
+    given ← liftIo(Rng.chooseint(1000, 1002).run)
+    _ ← WMT.iterateUntil(liftIo(gameLoop(given)))(winningCondition(given, _))
+    _ ← liftIo(putStrLn(s"you won, not bad"))
   } yield ()
 
   private def require4digitInt: IO[Int] = {
@@ -73,5 +78,12 @@ object GuessNumber {
   /* u can use it for ugly counting solution.  tries ← whileMprop[IO, (Int, Int)](s ⇒ gameLoop(given, s._2))(0 → 0)(s ⇒ winningCondition(given, s._1))(ioMonad) */
   private def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
     if (p(a)) M.point(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
+
+  // Almost natural transformation: WriterT[Id, W, A] ~> WriterT[IO, W, A]
+  private def liftW[W, A](w: Writer[W, A]): WriterT[IO, W, A] =
+    WriterT(IO(w.run))
+
+  private def liftIo[A](w: IO[A]): WriterT[IO, List[String], A] =
+    WriterT(w map (a ⇒ (List("added " + a), a)))
 
 }

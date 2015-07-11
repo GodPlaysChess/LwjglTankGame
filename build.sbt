@@ -10,7 +10,7 @@ resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases"
 
 resolvers += "stephenjudkins-bintray" at "http://dl.bintray.com/stephenjudkins/maven"
 
-libraryDependencies += "ps.tricerato" %% "babysteps/pureimage" % "0.1.2"
+//libraryDependencies += "ps.tricerato" %% "babysteps/pureimage" % "0.1.2"
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.2"
 
