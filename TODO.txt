@@ -3,3 +3,18 @@
 
 - Monad for Graphics
 - Monad for Gameloop, and try to use transformer
+
+
+
+
+
+
+
+Questions:
+
+1) how to access methods in Traits such as MaybeTFunctions
+
+A: See, who extends this trait. Usually all of these funcitons are gathered in one object.
+F.e:    object MaybeT extends MaybeTFunctions
+
+2) look for >>= and lifts.

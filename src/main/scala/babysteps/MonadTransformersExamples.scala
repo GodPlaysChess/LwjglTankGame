@@ -1,7 +1,10 @@
 package babysteps
 
+import babysteps.MTHelper._
+
 import scala.language.postfixOps
-import scalaz.effect.IO
+import scalaz.Alpha.A
+import scalaz.effect.{LiftIO, MonadIO, IO}
 import scalaz.{MaybeT, Monoid, Scalaz, Maybe}
 import scalaz.Maybe.{Empty, Just}
 import scalaz.effect.IO._
@@ -42,26 +45,43 @@ object MonadTransformersExamples {
   def safeIO(li: List[Maybe[String]]): IO[Unit] = for {
     _ <- entrance
     result ← computeInIo(li)                                                  //that's the work for monad Transformer
-    res ← result
-    _ ← putStrLn(res.toString)
+    _ ← putLn(result)
   } yield()
-            //http://underscore.io/blog/posts/2013/12/20/scalaz-monad-transformers.html
+
   def safeIO1(li: List[Maybe[String]]): MaybeT[IO, Int] = for {
-    _ ← entrance
-    result ← computeInIo(li)
-    res ← result
-    _ ← putStrLn(res.toString)
+    _ ← liftIo(entrance)
+    res ← MaybeT(computeInIo(li))
+    _ ← liftIo(putStrLn("I am inside a transformer now, check this out").flatMap(_ ⇒ putStrLn((res * 2).toString)))
   } yield res
 
   def main (args: Array[String]) {
-    val strings: List[Maybe[String]] = Just("hello") :: Just("I") :: Just("am") :: Nil
-    safeIO(strings).unsafePerformIO()
+    val strings: List[Maybe[String]] = Just("hello") :: Just("I") :: Just("am") :: Empty[String]() :: Nil
+//    safeIO(strings).unsafePerformIO()
     safeIO1(strings).run.unsafePerformIO()
   }
 
-  def main1 (args: Array[String]) {
-    val strings: List[Maybe[String]] = Just("hello") :: Just("I") :: Just("am") :: Nil
-    toLength(strings) println
-  }
+}
+
+object MTHelper {
+  type MaybeIOT[A] = MaybeT[IO, A]
+
+  def liftIo[A](m: IO[A]): MaybeT[IO, A] =
+    MaybeT(m map (Just(_)))
+  
+  def liftMb[A](m: Maybe[A]): MaybeT[IO, A] =
+    MaybeT(m.pure[IO])
+
+//  def toMb[A](ioa: IO[A]): MaybeT[IO, A] = {
+//    implicit val MbIO = MaybeT.maybeTMonadPlus[IO]
+//    implicit val sd = optionTLiftIO
+//    implicit val Mb = scalaz.Maybe.maybeInstance
+//    ioa.liftIO[MaybeIOT]//(MbIO) //[MaybeT[IO, A]](MbIO)
+//  }
+
+//  /
+    // def liftIO[MaybeT[_]](implicit m: MonadIO[M]): MaybeT[A] =/                /\
+    //             __/||\__
+   //                 ||
+  //                             MonadIO . of Maybe
 
 }
