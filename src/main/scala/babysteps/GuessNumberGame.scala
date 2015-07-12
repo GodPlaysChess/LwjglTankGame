@@ -12,7 +12,10 @@ import scalaz.effect.IO._
  */
 object GuessNumberGame {
   def main(args: Array[String]) {
-    GuessNumber.bullsCows.run.flatMap(logandres ⇒ putStrLn(logandres._1.mkString("\n"))).unsafePerformIO()
+//    GuessNumber.bullsCows.run.flatMap(logandres ⇒ putStrLn(logandres._1.mkString("\n"))).unsafePerformIO()
+    GuessNumber.bullsCows.written.flatMap(
+      log ⇒ putStrLn(log.mkString("Log:\n", "\n", "\n=========="))
+    ).unsafePerformIO()
   }
 }
 
@@ -51,9 +54,9 @@ object GuessNumber {
   /* =============================================== */
 
   def bullsCows: WriterT[IO, List[String], Unit] = for {
-    given ← liftIo(Rng.chooseint(1000, 1002).run)
+    given ← liftIoEmptyLog(Rng.chooseint(1000, 1002).run)
     _ ← WMT.iterateUntil(liftIo(gameLoop(given)))(winningCondition(given, _))
-    _ ← liftIo(putStrLn(s"you won, not bad"))
+    _ ← liftIoEmptyLog(putStrLn(s"you won, not bad"))
   } yield ()
 
   private def require4digitInt: IO[Int] = {
@@ -84,6 +87,13 @@ object GuessNumber {
     WriterT(IO(w.run))
 
   private def liftIo[A](w: IO[A]): WriterT[IO, List[String], A] =
-    WriterT(w map (a ⇒ (List("added " + a), a)))
+    WriterT(w map (a ⇒ (List("tried " + a), a)))
+
+  private def liftIoEmptyLog[A](w: IO[A]): WriterT[IO, List[String], A] =
+    liftIoLog(w)(_ ⇒ List.empty)
+
+  private def liftIoLog[A](w: IO[A])(log: A ⇒ List[String]): WriterT[IO, List[String], A] =
+    WriterT(w map (a ⇒ (log(a), a)))
+
 
 }
