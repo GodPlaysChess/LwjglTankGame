@@ -13,7 +13,6 @@ import scalaz.effect.IO._
  */
 object GuessNumberGame {
   def main(args: Array[String]) {
-//    GuessNumber.bullsCows.run.flatMap(logandres ⇒ putStrLn(logandres._1.mkString("\n"))).unsafePerformIO()
     GuessNumber.bullsCows.written.flatMap(
       log ⇒ putStrLn(log.mkString("Log:\n", "\n", "\n=========="))
     ).unsafePerformIO()
@@ -27,6 +26,8 @@ object GuessNumber {
   implicit val stringMonoid = scalaz.std.AllInstances.stringInstance.monoid
   implicit val WMT = WriterT.writerTMonad[IO, List[String]]
 
+  /* Helper types */
+  type WriterTIO[A] = WriterT[IO, List[String], A]
 
   def guessNumber: IO[Unit] = for {
     goal ← requireMaxNumber
@@ -57,8 +58,8 @@ object GuessNumber {
 
   def bullsCows: WriterT[IO, List[String], Unit] = for {
     given ← liftIo1(Rng.chooseint(1000, 1002).run) :++>> (v ⇒ List("Secret number is " + v))
-    _ ← WMT.iterateUntil(liftIo(gameLoop(given)))(winningCondition(given, _))
-    _ ← liftIoEmptyLog(putStrLn(s"you won, not bad"))
+    _ ← WMT.iterateUntil(gameLoop(given).liftIO[WriterTIO] :++>> (n ⇒ List(s"tried $n")))(winningCondition(given, _))
+    _ ← putStrLn(s"you won, not bad").liftIO[WriterTIO]
   } yield ()
 
   private def require4digitInt: IO[Int] = {
@@ -88,22 +89,15 @@ object GuessNumber {
   private def liftW[W, A](w: Writer[W, A]): WriterT[IO, W, A] =
     WriterT(IO(w.run))
 
+  // the same as liftIO
   private def liftIo[A](w: IO[A]): WriterT[IO, List[String], A] =
     WriterT(w map (a ⇒ (List("tried " + a), a)))
 
-  type WriterTIO[A] = WriterT[IO, List[String], A]
   private def liftIo1[A](w: IO[A]): WriterT[IO, List[String], A] =
     w.liftIO[WriterTIO]
 
-  private def liftIoEmptyLog[A](w: IO[A]): WriterT[IO, List[String], A] =
-    liftIoLog(w)(_ ⇒ List.empty)
-
-  private def liftIoLog[A](w: IO[A])(log: A ⇒ List[String]): WriterT[IO, List[String], A] =
-    WriterT(w map (a ⇒ (log(a), a)))
-
-  private def liftIoLog1[A](w: IO[A])(log: A ⇒ List[String]): WriterT[IO, List[String], A] =
-    WriterT(w map (a ⇒ (log(a), a)))
-
+  private def liftWithLog[A](w: IO[A])(log: A ⇒ List[String]): WriterT[IO, List[String], A] =
+    w.liftIO[WriterTIO] :++>> log
 
 //  private def liftIo1[A](w: IO[A]): WriterT[IO, List[String], A] =
 //    MaybeT.maybeTMonadTrans.liftM(w)(IO.ioMonad)
