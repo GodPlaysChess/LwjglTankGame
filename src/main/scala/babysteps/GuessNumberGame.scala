@@ -3,6 +3,7 @@ package babysteps
 import com.nicta.rng.Rng
 
 import scala.language.higherKinds
+import scalaz.Alpha.A
 import scalaz._
 import scalaz.effect.IO
 import scalaz.effect.IO._
@@ -23,6 +24,7 @@ object GuessNumber {
 
   /* Implicits */
   implicit val listMonoid = scalaz.std.AllInstances.listMonoid[String]
+  implicit val stringMonoid = scalaz.std.AllInstances.stringInstance.monoid
   implicit val WMT = WriterT.writerTMonad[IO, List[String]]
 
 
@@ -54,7 +56,7 @@ object GuessNumber {
   /* =============================================== */
 
   def bullsCows: WriterT[IO, List[String], Unit] = for {
-    given ← liftIoEmptyLog(Rng.chooseint(1000, 1002).run)
+    given ← liftIo1(Rng.chooseint(1000, 1002).run) :++>> (v ⇒ List("Secret number is " + v))
     _ ← WMT.iterateUntil(liftIo(gameLoop(given)))(winningCondition(given, _))
     _ ← liftIoEmptyLog(putStrLn(s"you won, not bad"))
   } yield ()
@@ -89,11 +91,25 @@ object GuessNumber {
   private def liftIo[A](w: IO[A]): WriterT[IO, List[String], A] =
     WriterT(w map (a ⇒ (List("tried " + a), a)))
 
+  type WriterTIO[A] = WriterT[IO, List[String], A]
+  private def liftIo1[A](w: IO[A]): WriterT[IO, List[String], A] =
+    w.liftIO[WriterTIO]
+
   private def liftIoEmptyLog[A](w: IO[A]): WriterT[IO, List[String], A] =
     liftIoLog(w)(_ ⇒ List.empty)
 
   private def liftIoLog[A](w: IO[A])(log: A ⇒ List[String]): WriterT[IO, List[String], A] =
     WriterT(w map (a ⇒ (log(a), a)))
+
+  private def liftIoLog1[A](w: IO[A])(log: A ⇒ List[String]): WriterT[IO, List[String], A] =
+    WriterT(w map (a ⇒ (log(a), a)))
+
+
+//  private def liftIo1[A](w: IO[A]): WriterT[IO, List[String], A] =
+//    MaybeT.maybeTMonadTrans.liftM(w)(IO.ioMonad)
+
+  //def liftM[G[_] : Monad, A](a: G[A]): F[G, A]
+
 
 
 }

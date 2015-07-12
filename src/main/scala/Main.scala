@@ -1,6 +1,15 @@
+import scalaz.effect.IO
+
+object Main {
 
 
-object Main extends App {
+  def main(args: Array[String]) {
+    safeMain.unsafePerformIO()
+  }
+
+  def safeMain: IO[Unit] = {
+     ???
+  }
 
 //  val readKeyboardIO: IO[Image[Color]] = new Game().start1()
 //  val readKeyboardIO: IO[String] = ???

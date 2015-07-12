@@ -1,5 +1,5 @@
-- Monad transformers (List-> Optional, IO -> List, IO Optional, IO -> State, Reader -> List)
-- Add a writer for couple of apps, for instance - log for bulls
++ Monad transformers (List-> Optional, IO -> List, IO Optional, IO -> State, Reader -> List)
++ Add a writer for couple of apps, for instance - log for bulls
 
 - Monad for Graphics
 - Monad for Gameloop, and try to use transformer
@@ -18,3 +18,4 @@ A: See, who extends this trait. Usually all of these funcitons are gathered in o
 F.e:    object MaybeT extends MaybeTFunctions
 
 2) look for >>= and lifts.
+A: Looks like I have to write them myself.. >>= a hidden behind private access.

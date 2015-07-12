@@ -49,9 +49,9 @@ object MonadTransformersExamples {
   } yield()
 
   def safeIO1(li: List[Maybe[String]]): MaybeT[IO, Int] = for {
-    _ ← liftIo(entrance)
+    _ ← liftIo1(entrance)
     res ← MaybeT(computeInIo(li))
-    _ ← liftIo(putStrLn("I am inside a transformer now, check this out").flatMap(_ ⇒ putStrLn((res * 2).toString)))
+    _ ← liftIo1(putStrLn("I am inside a transformer now, check this out").flatMap(_ ⇒ putStrLn((res * 2).toString)))
   } yield res
 
   def main (args: Array[String]) {
@@ -63,10 +63,19 @@ object MonadTransformersExamples {
 }
 
 object MTHelper {
-  type MaybeIOT[A] = MaybeT[IO, A]
+  implicit val IOM = IO.ioMonad
+  implicit val MBT = MaybeT.maybeTMonadTrans
+  type MaybeTIO[A] = MaybeT[IO, A]
 
   def liftIo[A](m: IO[A]): MaybeT[IO, A] =
     MaybeT(m map (Just(_)))
+
+  //the same as above
+  def liftIo1[A](m: IO[A]): MaybeT[IO, A] =
+    MBT.liftM(m)
+
+//  def liftIo2[A](m: IO[A]): MaybeT[IO, A] =
+//    m.liftIO[MaybeTIO] //?
   
   def liftMb[A](m: Maybe[A]): MaybeT[IO, A] =
     MaybeT(m.pure[IO])

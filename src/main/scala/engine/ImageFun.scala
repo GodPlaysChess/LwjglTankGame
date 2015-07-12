@@ -7,6 +7,7 @@ import engine.ImageFun.Image
 import mech.Math._
 
 import scala.swing.Color
+import scalaz.Alpha.A
 import scalaz.{Monad, MonadPlus}
 
 object ImageFun {
@@ -77,13 +78,17 @@ object ImageFun {
 }
 
 // looks really like Reader
-object ImageMonad extends Monad[Image] with MonadPlus[Image] {
+object ImageMonad extends Monad[Image] {
   override def point[A](a: => A): Image[A] = (_, _) => a
 
   override def bind[A, B](fa: Image[A])(f: (A) => Image[B]): Image[B] =
     (col, row) => f(fa(col, row))(col, row)
 
-  override def empty[A]: Image[A] = (_, _) ⇒ None.asInstanceOf[A]
+//  override def empty[A]: Image[A] = (_, _) ⇒ None.asInstanceOf[A]
 
-  override def plus[A](a: Image[A], b: ⇒ Image[A]): Image[A] = bind(a)(_ ⇒ b)
+  def >>[A, B](a: Image[A], b: ⇒ Image[B]): Image[B] = bind(a)(_ ⇒ b)
+
+  def >>= [A, B](fa: Image[A])(f: (A) => Image[B]): Image[B] = bind(fa)(f)
+
+//  override def plus[A](a: Image[A], b: ⇒ Image[A]): Image[A] = bind(a)(_ ⇒ b)
 }
