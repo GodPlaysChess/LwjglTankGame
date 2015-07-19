@@ -36,22 +36,21 @@ class Game {
   }
 
   def start: IO[Unit] = {
-    IO.ioMonad.forever(loop(0).point[IO])
+    whileMprop(loop)(0)(_ < 10)(IO.ioMonad) map (_ ⇒ ())
   }
 
   def loop(w: World): IO[World] = for {
-    key ← read  
-    val world = worldTick(w, key)
-    val image = render(world)
-    _ ← screen.show(image).point[IO]
-    _ ← IO.putStrLn(world.toString)
+    key ← read
+    val w1 = worldTick(w, key)
+    _ ← screen.show(render(w1)).point[IO]
+    _ ← IO.putStrLn(w.toString)
     //    def step(world: World): IO[World] = for {
     //      key ? ScreenOps.readInput
     //      _ ? ScreenOps.draw(ImageMonad.point(world))
     //    } yield worldTick(world)
     //
     //    whileMprop(step)(start)(endCondition)(IO.ioMonad)
-  } yield world
+  } yield w1
 
   //  type IOState[+A, B] = StateT[IO, A, B]
 
