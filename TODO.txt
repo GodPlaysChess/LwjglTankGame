@@ -1,6 +1,11 @@
 + Monad transformers (List-> Optional, IO -> List, IO Optional, IO -> State, Reader -> List)
 + Add a writer for couple of apps, for instance - log for bulls
++ Reader
+?+ ReaderT, StateT
 
+
+- Interpreter with Free
+- Concurrency with Task
 - Monad for Graphics
 - Monad for Gameloop, and try to use transformer
 

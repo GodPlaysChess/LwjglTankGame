@@ -8,7 +8,7 @@ object Main {
   }
 
   def safeMain: IO[Unit] = {
-     ???
+     new Game().start
   }
 
 //  val readKeyboardIO: IO[Image[Color]] = new Game().start1()

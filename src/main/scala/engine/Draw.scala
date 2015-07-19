@@ -4,9 +4,10 @@ import engine.ImageFun.Image
 
 import scala.swing.Color
 
-class Draw(cols: Int, rows: Int, image: Image[Color]) {
-  def show() = {
-    val display = new MainScreen(cols, rows)
+class Draw(cols: Int, rows: Int) {
+  val display = new MainScreen(cols, rows)
+
+  def show(image: Image[Color]) = {
     display.rasterize(image)
     display.open()
   }

@@ -85,10 +85,6 @@ object GuessNumber {
   private def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
     if (p(a)) M.point(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
 
-  // Almost natural transformation: WriterT[Id, W, A] ~> WriterT[IO, W, A]
-  private def liftW[W, A](w: Writer[W, A]): WriterT[IO, W, A] =
-    WriterT(IO(w.run))
-
   // the same as liftIO
   private def liftIo[A](w: IO[A]): WriterT[IO, List[String], A] =
     WriterT(w map (a ⇒ (List("tried " + a), a)))
@@ -98,12 +94,5 @@ object GuessNumber {
 
   private def liftWithLog[A](w: IO[A])(log: A ⇒ List[String]): WriterT[IO, List[String], A] =
     w.liftIO[WriterTIO] :++>> log
-
-//  private def liftIo1[A](w: IO[A]): WriterT[IO, List[String], A] =
-//    MaybeT.maybeTMonadTrans.liftM(w)(IO.ioMonad)
-
-  //def liftM[G[_] : Monad, A](a: G[A]): F[G, A]
-
-
 
 }
