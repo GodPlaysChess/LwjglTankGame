@@ -14,7 +14,7 @@ object Command {
 
   case class Fire[Next](next: Next) extends Command[Next]
 
-  case class Done extends Command[Nothing]
+  case class Done() extends Command[Nothing]
 
 
   implicit val commandFunctor: Functor[Command] = new Functor[Command] {
@@ -26,7 +26,7 @@ object Command {
   }
 
   def go(dir: Direction): Free[Command, Unit] =
-    Free.Suspend(Go(dir, Free.Return[Command, Unit](())))
+    Free.suspend(Go(dir, Free.return_(())))
 
   def fire: Free[Command, Unit] =
     Free.Suspend(Fire(Free.Return[Command, Unit](())))
