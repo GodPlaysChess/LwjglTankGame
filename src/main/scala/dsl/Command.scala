@@ -73,24 +73,22 @@ object LogInterpreter extends Interpreter[Unit] {
   override def interpret(program: Free[Command, Unit]): Unit = program.fold({
     _ ⇒ println("out")
   }, {
-    case Go(d, next) ⇒ {
+    case Go(d, next) ⇒
       d match {
         case Left() => println("Going left")
         case Right() => println("Going right")
       }
       interpret(next)
-    }
-    case Fire(next) ⇒ {
-      println("Fire"); interpret(next)
-    }
+    case Fire(next) ⇒
+      println("Fire")
+      interpret(next)
     case Done() ⇒ println("======")
   })
 }
 
 object WriterLogInterpreter extends Interpreter[IO[String]] {
 
-  import scalaz._
-  import Scalaz._
+  import scalaz.syntax.monad._
 
   val IOM = IO.ioMonad
 
