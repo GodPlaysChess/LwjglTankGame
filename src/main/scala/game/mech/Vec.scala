@@ -1,4 +1,4 @@
-package mech
+package game.mech
 
 case class Vec(x: Double, y: Double) {
   def +(other: Vec) = Vec(x + other.x, y + other.y)

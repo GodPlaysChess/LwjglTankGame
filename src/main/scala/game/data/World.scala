@@ -1,9 +1,9 @@
-package data
+package game.data
 
-import entities.Drawable
+import game.entities.Drawable
 
 /**
- * Contains all game data
+ * Contains all game game.data
  */
 case class World(background: Vector[Drawable] = Vector(),
                  terrain: Vector[Drawable] = Vector(),

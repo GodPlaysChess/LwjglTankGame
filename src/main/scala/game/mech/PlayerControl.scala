@@ -1,6 +1,6 @@
-package mech
+package game.mech
 
-import entities.CanMove
+import game.entities.CanMove
 
 class PlayerControl(player: CanMove) {
   private[this] var lastKey: String = ""

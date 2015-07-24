@@ -1,6 +1,6 @@
-package dsl
+package babysteps.dsl
 
-import dsl.Command.{Done, Fire, Go}
+import babysteps.dsl.Command.{Done, Fire, Go}
 
 import scala.language.higherKinds
 import scalaz.effect.IO
@@ -48,7 +48,7 @@ object App {
 
   def main(args: Array[String]) {
     val program: Free[Command, Unit] = for {
-      _ ← go(Left())
+      _ ← go(Left)
       _ ← fire
       _ ← done
     } yield ()
@@ -75,8 +75,8 @@ object LogInterpreter extends Interpreter[Unit] {
   }, {
     case Go(d, next) ⇒
       d match {
-        case Left() => println("Going left")
-        case Right() => println("Going right")
+        case Left => println("Going left")
+        case Right => println("Going right")
       }
       interpret(next)
     case Fire(next) ⇒
@@ -96,8 +96,8 @@ object WriterLogInterpreter extends Interpreter[IO[String]] {
     _ ⇒ IOM.pure("")
   }, {
     case Go(d, next) ⇒ d match {
-      case Left() => IOM.map(interpret(next))("Going left\n" + _)
-      case Right() => IOM.map(interpret(next))("Going right\n" + _)
+      case Left => IOM.map(interpret(next))("Going left\n" + _)
+      case Right => IOM.map(interpret(next))("Going right\n" + _)
     }
     case Fire(next) ⇒ IOM.map(interpret(next))("Fire \n" + _)
     case Done() ⇒ "======".pure[IO]

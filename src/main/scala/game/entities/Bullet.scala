@@ -1,5 +1,5 @@
-package entities
+package game.entities
 
-import mech.Vec
+import game.mech.Vec
 
 case class Bullet(center: Vec) extends Drawable

@@ -1,6 +1,6 @@
-package entities
+package game.entities
 
-import mech.Vec
+import game.mech.Vec
 
 case class Square(var center: Vec, size: Double) extends Drawable with CanMove with CanFire {
 

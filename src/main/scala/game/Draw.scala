@@ -1,6 +1,6 @@
-package engine
+package game
 
-import engine.ImageFun.Image
+import functionalengineattempt.ImageFun.Image
 
 import scala.swing.Color
 

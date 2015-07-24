@@ -1,7 +1,8 @@
+package babysteps
+
+import scalaz.effect.IO
 import scalaz._
 import Scalaz._
-import scalaz.effect.IO
-import scala.language.higherKinds
 
 object StateMonadTransformerExample {
   def getActors(movieIds: List[String],
@@ -19,15 +20,3 @@ object StateMonadTransformerExample {
   }
 
 }
-
-case class Actor(id: String, name: String)
-
-trait MovieService {
-  def actorIds(movieId: String): IO[List[String]]
-}
-
-trait ActorService {
-  def actor(id: String): IO[Option[Actor]]
-}
-
-

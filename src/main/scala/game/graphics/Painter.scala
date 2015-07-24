@@ -1,8 +1,8 @@
-package graphics
+package game.graphics
 
 import java.awt.Color
 
-import entities.{Drawable, Square}
+import game.entities.{Drawable, Square}
 
 import scala.swing.Graphics2D
 

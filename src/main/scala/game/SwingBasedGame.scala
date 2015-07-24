@@ -1,12 +1,15 @@
+package game
+
 import java.awt.{Color, Dimension, Graphics2D}
-import data.World
-import entities.Square
-import graphics.Painter
-import mech.{PlayerControl, Vec}
+
+import game.data.World
+import game.entities.Square
+import game.graphics.Painter
+import game.mech.{PlayerControl, Vec}
 
 import scala.swing.event.Key._
-import scala.swing.event._
-import scala.swing.{MainFrame, Panel, _}
+import scala.swing.event.{FocusLost, KeyPressed, MouseClicked}
+import scala.swing.{MainFrame, Panel, SimpleSwingApplication}
 
 object SwingBasedGame extends SimpleSwingApplication {
 
@@ -41,7 +44,7 @@ object SwingBasedGame extends SimpleSwingApplication {
 
     override def paintComponent(g: Graphics2D) = {
       super.paintComponent(g)
-      //      entities.foreach(Painter.draw(_)(g))
+      //      game.entities.foreach(Painter.draw(_)(g))
       g.setColor(new Color(100, 100, 100))
       Painter.draw(player)(g)
       g.drawString("Press arrows to move and mouseclick to fire " +

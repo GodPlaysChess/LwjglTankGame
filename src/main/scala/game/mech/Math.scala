@@ -1,4 +1,4 @@
-package mech
+package game.mech
 
 import math._
 

@@ -1,3 +1,5 @@
+package functionalengineattempt
+
 import scalaz.effect.IO
 
 object Main {
@@ -21,5 +23,3 @@ object Main {
 //    if (s == "l") ImageMonad.point(Color.gray) else ImageMonad.point(Color.green)
 
 }
-
-

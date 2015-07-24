@@ -1,10 +1,10 @@
-package engine
+package functionalengineattempt
 
 import java.io.File
 import javax.imageio.ImageIO
 
-import engine.ImageFun.Image
-import mech.Math._
+import functionalengineattempt.ImageFun.Image
+import game.mech.Math._
 
 import scala.swing.Color
 import scalaz.Alpha.A

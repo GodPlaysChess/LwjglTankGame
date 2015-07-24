@@ -1,6 +1,6 @@
-package entities
+package game.entities
 
-import mech.Vec
+import game.mech.Vec
 
 trait CanMove extends Drawable {
 

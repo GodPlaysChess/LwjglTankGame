@@ -1,14 +1,15 @@
+package functionalengineattempt
+
 import java.awt.{Color, Dimension, Graphics2D}
 
-import data.World
-import entities.Square
-import graphics.Painter
-import mech.{PlayerControl, Vec}
+import game.data.World
+import game.entities.Square
+import game.graphics.Painter
+import game.mech.{PlayerControl, Vec}
 
 import scala.collection.immutable.Queue
-import scala.swing.event.Key._
-import scala.swing.event._
-import scala.swing.{SimpleSwingApplication, MainFrame, Panel}
+import scala.swing.event.{Key, FocusLost, KeyPressed, MouseClicked}
+import scala.swing.{MainFrame, Panel, SimpleSwingApplication}
 import scalaz.effect.IO
 
 object CloneOFSwingBasedGame extends SimpleSwingApplication {
@@ -38,7 +39,7 @@ object CloneOFSwingBasedGame extends SimpleSwingApplication {
   //    case _ => State.put(0)
   //  }
 
-  def onKeyPress(keyCode: Value): Queue[Action] = {
+  def onKeyPress(keyCode: Key.Value): Queue[Action] = {
     Keypress(keyCode) +: actionsQueue
   }
 
@@ -60,7 +61,7 @@ object CloneOFSwingBasedGame extends SimpleSwingApplication {
 
     override def paintComponent(g: Graphics2D) = {
       super.paintComponent(g)
-      //      entities.foreach(Painter.draw(_)(g))
+      //      game.entities.foreach(Painter.draw(_)(g))
       g.setColor(new Color(100, 100, 100))
       Painter.draw(player)(g)
       g.drawString("Press arrows to move and mouseclick to fire " +
@@ -75,12 +76,3 @@ object CloneOFSwingBasedGame extends SimpleSwingApplication {
   }
 
 }
-
-sealed trait Action
-
-sealed trait MouseAction extends Action
-
-sealed trait KeyboardAction extends Action
-
-case class Keypress(keyCode: Value) extends KeyboardAction
-
