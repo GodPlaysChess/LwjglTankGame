@@ -5,16 +5,16 @@ import entities.Square
 import graphics.Painter
 import mech.{PlayerControl, Vec}
 
+import scala.collection.immutable.Queue
 import scala.swing.event.Key._
 import scala.swing.event._
-import scala.swing.{MainFrame, Panel, _}
-import scalaz.State
+import scala.swing.{SimpleSwingApplication, MainFrame, Panel}
 import scalaz.effect.IO
 
 object CloneOFSwingBasedGame extends SimpleSwingApplication {
   implicit val IM = IO.ioMonad
 
-  override def main (args: Array[String]) {
+  override def main(args: Array[String]) {
     safeMain(args).unsafePerformIO()
   }
 
@@ -27,14 +27,19 @@ object CloneOFSwingBasedGame extends SimpleSwingApplication {
   val player = Square(Vec(100, 200), 30)
   val entities = World(players = Vector(player))
   val control = new PlayerControl(player)
+  var actionsQueue = Queue[Action]() // or Free?
 
-  def onKeyPress(keyCode: Value): State[World, Unit] = keyCode match {
-    case Left => State.gets(_ + 1)
-    case Right => State.gets(_ + 2)
-    case Up => State.gets(_ + 3)
-    case Down => State.gets(_ + 4)
-    case Space => State.gets(_ - 1)
-    case _ => State.put(0)
+  //  def onKeyPress(keyCode: Value): State[World, Unit] = keyCode match {
+  //    case Left => State.gets(_ + 1)
+  //    case Right => State.gets(_ + 2)
+  //    case Up => State.gets(_ + 3)
+  //    case Down => State.gets(_ + 4)
+  //    case Space => State.gets(_ - 1)
+  //    case _ => State.put(0)
+  //  }
+
+  def onKeyPress(keyCode: Value): Queue[Action] = {
+    Keypress(keyCode) +: actionsQueue
   }
 
   lazy val mainScreen = new Panel {
@@ -48,8 +53,8 @@ object CloneOFSwingBasedGame extends SimpleSwingApplication {
     reactions += {
       case e: MouseClicked => // fire
       case KeyPressed(_, key, _, _) =>
-        onKeyPress(key)
-        repaint()
+        actionsQueue = onKeyPress(key)
+//        repaint()
       case _: FocusLost => repaint()
     }
 
@@ -70,3 +75,12 @@ object CloneOFSwingBasedGame extends SimpleSwingApplication {
   }
 
 }
+
+sealed trait Action
+
+sealed trait MouseAction extends Action
+
+sealed trait KeyboardAction extends Action
+
+case class Keypress(keyCode: Value) extends KeyboardAction
+

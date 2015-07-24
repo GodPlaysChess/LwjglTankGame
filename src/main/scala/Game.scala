@@ -1,19 +1,17 @@
 import java.awt.Color
 
-import data.World
 import engine.ImageFun.Image
 import engine.{Draw, ImageMonad}
 
 import scala.language.higherKinds
 import scala.languageFeature.higherKinds
-import scala.swing.event.Key
+import scala.swing.event.Key._
 import scalaz.Scalaz._
 import scalaz.effect.IO
-import scalaz.{Free, Monad}
+import scalaz.{State, Monad}
 
 class Game {
 
-  type Input = Key.Value
   type Output = Boolean
   type World = Int // for now just int
   val screen = new Draw(640, 480)
@@ -27,6 +25,19 @@ class Game {
   def read: IO[Int] = {
     1.point[IO]
 //    System.in.read().point[IO]
+  }
+
+  def step(input: Value, time: Long): State[World, Boolean] = for {
+    w0 ← get[World]
+    val w1 = gameLogic(input, w0)
+    val x = Thread.sleep(time)
+    _ ← put[World](w1)
+  } yield false
+
+  def gameLogic(input: Value, world: World): World = input match {
+    case Left ⇒ world + 1
+    case Right ⇒ world + 2
+    case _ ⇒ 0
   }
   
   def render[A](world: World): Image[Color] = world match {
@@ -61,14 +72,6 @@ class Game {
   def initializeWorld(): World = {
     0
   }
-
-//  def draw(image: Image[Color]): IO[Unit] = {
-//    IO.io(rw => Free.return_(rw -> {
-//      new Draw(500, 500, image).show() // should not be always new
-//      ()
-//    }))
-//  }
-
   def whileMprop[M[_], A](f: A ⇒ M[A])(a: A)(p: A ⇒ Boolean)(implicit M: Monad[M]): M[A] =
     if (!p(a)) f(a) else M.bind(f(a))(n ⇒ whileMprop(f)(n)(p)(M))
 }
@@ -76,7 +79,7 @@ class Game {
 object ScreenOps {
   def draw[A](image: Image[A]): IO[Unit] = ???
 
-  def readInput: IO[Key.Value] = ???
+  def readInput: IO[Value] = ???
 
 //  ifReadyDo :: Handle -> IO a -> IO (Maybe a)
 //  ifReadyDo hnd x = hReady hnd >>= f
